@@ -29,17 +29,20 @@ export default function InventoryScreen() {
         setIsLoading(true)
         try {
             const newCategory = await CategoryService.createCategory(name, description, token)
-            Alert.alert("categoria creada" + `la categoria ${newCategory.name} se guardo con exito`),
+            Alert.alert(
+                "Categoría creada",
+                `La categoría ${newCategory.name} se guardó con éxito.`,
                 [
                     {
-                        text: "aceptar",
-                        onprogress: () => {
-                            setName("")
-                            setDescription("")
-                            router.replace("/(protected)/dashboard")
+                        text: "Aceptar",
+                        onPress: () => {
+                            setName("");
+                            setDescription("");
+                            router.replace("/(protected)/dashboard");
                         }
                     }
                 ]
+            );
         } catch (error: any) {
             Alert.alert("Error" + error.message || "no se puedo guardar la categoria")
         }
@@ -101,25 +104,25 @@ export default function InventoryScreen() {
                             />
                         </View>
 
-                        <TouchableOpacity 
-                        style={styles.btnSave}
-                        onPress={handleSaveCategory}
+                        <TouchableOpacity
+                            style={styles.btnSave}
+                            onPress={handleSaveCategory}
                         >
                             {isLoading ? (
-                                <ActivityIndicator color="#fff" size="small"/>
-                            ):(
+                                <ActivityIndicator color="#fff" size="small" />
+                            ) : (
                                 <>
-                                   
+
                                     <Text style={styles.btnSaveText}>Guardar Categoria</Text>
                                 </>
-                                
+
                             )}
-                            
+
                         </TouchableOpacity>
 
                         <TouchableOpacity style={styles.btnCancel}>
-                            
-                            <Text style={styles.btnCancelText}>Guardar Categoria</Text>
+
+                            <Text style={styles.btnCancelText}>cancelar</Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>

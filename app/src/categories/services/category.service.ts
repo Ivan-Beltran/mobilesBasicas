@@ -53,6 +53,7 @@ export const CategoryService={
                     }
                 }
             )
+            console.log(response.data)
             return response.data
 
         }catch(error){

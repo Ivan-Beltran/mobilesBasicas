@@ -1,9 +1,10 @@
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import { ProductService } from "../service/product.service";
 import { CategoryResponse, CategoryService } from "../../categories/services/category.service";
+import { ProductItem } from "../models/product.model";
 
 export function useCreateProduct() {
     const router = useRouter()
@@ -23,12 +24,43 @@ export function useCreateProduct() {
     const [IsLoadingProduct, setIsLoadingProduct] = useState(false)
     const [errorMessage, setErrorMessage] = useState<null | string>("")
     const [selectedCategoryName, setSelectedCategoryName] = useState("")
+    const [selectedCategoryId,setSelectedCategoryId]=useState<number | null>(null)
+    const [products,setProducts]=useState<ProductItem[]>([])
+    const [searchQuery, setSearchQuery]=useState("")
 
     useEffect(() => {
         if (token) {
             fetchCategories()
         }
     }, [token])
+
+    const fetchProducts= useCallback(async()=>{
+        if(!token) return
+
+        setIsLoadingProduct(true)
+        try{
+            if(selectedCategoryId===null){
+                const data=await ProductService.getProductByCategoryId(1,token)
+                setProducts(data)
+            }else{
+                const data=await ProductService.getProductByCategoryId(Number(selectedCategoryId),String(token))
+                setProducts(data)
+            }
+            
+        }
+        catch(error){
+            console.log("error al traer los productos")
+            setProducts([])
+        }
+        finally{
+            setIsLoadingProduct(false)
+        }
+        
+    },[token,selectedCategoryId])
+
+    useEffect(()=>{
+        fetchProducts()
+    },[fetchProducts])
 
     const fetchCategories = async () => {
         if (!token) return
@@ -57,10 +89,8 @@ export function useCreateProduct() {
         setErrorMessage(null)
         setIsLoadingProduct(true)
 
-        console.log("product id ", categoryId)
-
         try {
-            await ProductService.createProduct(
+            const response=await ProductService.createProduct(
                 {
                     name: name.trim(),
                     categoryId: Number(categoryId),
@@ -73,6 +103,8 @@ export function useCreateProduct() {
                 },
                 token
             )
+            console.log(response)
+
             Alert.alert(
                 "¡Producto creado!",
                 "El producto fue agregado correctamente.",
@@ -90,6 +122,19 @@ export function useCreateProduct() {
             setIsLoadingProduct(false)
         }
     }
+
+    const filteredProducts=useMemo(()=>{
+        return products.filter((p)=>{
+            const query=searchQuery.toLocaleLowerCase().trim()
+            if(!query) return true
+
+            return(
+                p.name.toLocaleLowerCase().includes(query) ||
+                p.description && p.description.toLocaleLowerCase().includes(query)
+            )
+        })
+    }, [products,searchQuery])
+
     return {
         name,
         setName,
@@ -115,6 +160,12 @@ export function useCreateProduct() {
         errorMessage,
         submitProduct,
         selectedCategoryName,
-        setSelectedCategoryName
+        setSelectedCategoryName,
+        products:filteredProducts,
+        searchQuery,
+        setSearchQuery,
+        refreshProducts:fetchProducts,
+        selectedCategoryId,
+        setSelectedCategoryId
     }
 }
